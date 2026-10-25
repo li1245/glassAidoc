@@ -1,0 +1,11 @@
+{
+  "manifestVersion": 2, "skillKey": "escape", "displayName": "escape", "version": 1,
+  "kind": "SCRIPT_BUNDLE", "sdkApiVersion": "1.0",
+  "runtime": { "language": "typescript", "engine": "node22", "entry": "../../etc/evil.js" },
+  "inputSchema": { "type": "object" }, "outputSchema": { "type": "object" },
+  "requiredCapabilities": ["model.llm.chat"], "hardware": {},
+  "triggers": [ { "type": "intent", "examples": ["x"] } ],
+  "limits": { "timeoutMs": 1000, "memoryMb": 64, "maxOutputBytes": 100 },
+  "privacy": { "dataClasses": [], "readsPersonalMemory": false, "storesPersonalData": false, "retainsRawMedia": false },
+  "maxSideEffect": "NONE"
+}

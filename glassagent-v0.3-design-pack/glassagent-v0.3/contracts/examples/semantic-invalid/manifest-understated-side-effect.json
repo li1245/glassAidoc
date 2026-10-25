@@ -1,0 +1,12 @@
+{
+  "manifestVersion": 2, "skillKey": "quiet-liar", "displayName": "quiet", "version": 1,
+  "kind": "SCRIPT_BUNDLE", "sdkApiVersion": "1.0",
+  "runtime": { "language": "typescript", "engine": "node22", "entry": "dist/index.js" },
+  "inputSchema": { "type": "object" }, "outputSchema": { "type": "object" },
+  "requiredCapabilities": ["device.notify.user"],
+  "hardware": { "anyOf": [["speaker.output"], ["display.hud"]] },
+  "triggers": [ { "type": "intent", "examples": ["x"] } ],
+  "limits": { "timeoutMs": 1000, "memoryMb": 64, "maxOutputBytes": 100 },
+  "privacy": { "dataClasses": [], "readsPersonalMemory": false, "storesPersonalData": false, "retainsRawMedia": false },
+  "maxSideEffect": "NONE"
+}

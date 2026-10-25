@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://glassagent.local/schemas/device-envelope-v1.json",
+  "title": "Device channel envelope v1 (control messages, JSON text frames)",
+  "description": "设备与服务端之间的控制消息信封。device_id 不出现在消息里，只能来自认证主体。音频与图像走二进制帧，不在此 Schema 内。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "type", "id", "seq", "ts", "payload"],
+  "properties": {
+    "v": { "const": 1 },
+    "type": { "enum": [
+      "hello", "hello.ack", "ping", "pong", "ack", "error",
+      "capability.report", "capability.changed",
+      "audio.begin", "audio.end", "photo.result", "sensor.sample", "feedback", "event",
+      "cmd.capture_photo", "cmd.listen", "cmd.stop", "cmd.subscribe_sensor", "cmd.config",
+      "out.display", "out.speak", "out.notify"
+    ] },
+    "id": { "$ref": "#/$defs/uuid" },
+    "seq": { "type": "integer", "minimum": 0 },
+    "ts": { "type": "integer", "minimum": 0, "description": "发送方 epoch 毫秒" },
+    "corr": { "$ref": "#/$defs/uuid", "description": "关联的请求消息 id" },
+    "payload": { "type": "object" }
+  },
+  "allOf": [
+    { "if": { "properties": { "type": { "const": "hello" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/hello" } } } },
+    { "if": { "properties": { "type": { "const": "hello.ack" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/helloAck" } } } },
+    { "if": { "properties": { "type": { "enum": ["capability.report", "capability.changed"] } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/capabilityReport" } } } },
+    { "if": { "properties": { "type": { "const": "audio.begin" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/audioBegin" } } } },
+    { "if": { "properties": { "type": { "const": "audio.end" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/audioEnd" } } } },
+    { "if": { "properties": { "type": { "const": "photo.result" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/photoResult" } } } },
+    { "if": { "properties": { "type": { "const": "sensor.sample" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/sensorSample" } } } },
+    { "if": { "properties": { "type": { "const": "feedback" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/feedback" } } } },
+    { "if": { "properties": { "type": { "const": "event" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/event" } } } },
+    { "if": { "properties": { "type": { "const": "error" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/error" } } } },
+    { "if": { "properties": { "type": { "const": "ack" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/ack" } } } },
+    { "if": { "properties": { "type": { "const": "cmd.capture_photo" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/cmdCapturePhoto" } } } },
+    { "if": { "properties": { "type": { "const": "cmd.listen" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/cmdListen" } } } },
+    { "if": { "properties": { "type": { "const": "cmd.stop" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/cmdStop" } } } },
+    { "if": { "properties": { "type": { "const": "cmd.subscribe_sensor" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/cmdSubscribeSensor" } } } },
+    { "if": { "properties": { "type": { "const": "out.display" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/outDisplay" } } } },
+    { "if": { "properties": { "type": { "const": "out.speak" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/outSpeak" } } } },
+    { "if": { "properties": { "type": { "const": "out.notify" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/outNotify" } } } }
+  ],
+  "$defs": {
+    "uuid": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "hardwareId": { "type": "string", "maxLength": 64, "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9_]*)+$" },
+    "hello": {
+      "type": "object", "additionalProperties": false, "required": ["protocol", "deviceModel", "firmware"],
+      "properties": {
+        "protocol": { "type": "object", "additionalProperties": false, "required": ["min", "max"],
+          "properties": { "min": { "type": "integer", "minimum": 1 }, "max": { "type": "integer", "minimum": 1 } } },
+        "deviceModel": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "firmware": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "resumeToken": { "type": "string", "maxLength": 256 },
+        "lastServerSeq": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "helloAck": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sessionId", "serverTime", "negotiatedVersion", "heartbeatSec", "limits", "resumeAccepted"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/uuid" },
+        "serverTime": { "type": "integer", "minimum": 0 },
+        "negotiatedVersion": { "const": 1 },
+        "heartbeatSec": { "type": "integer", "minimum": 5, "maximum": 120 },
+        "resumeAccepted": { "type": "boolean" },
+        "limits": { "type": "object", "additionalProperties": false,
+          "required": ["maxControlBytes", "maxFrameBytes", "maxFps"],
+          "properties": {
+            "maxControlBytes": { "type": "integer", "minimum": 1024, "maximum": 1048576 },
+            "maxFrameBytes": { "type": "integer", "minimum": 1024, "maximum": 8388608 },
+            "maxFps": { "type": "integer", "minimum": 1, "maximum": 30 } } }
+      }
+    },
+    "capabilityReport": {
+      "type": "object", "additionalProperties": false, "required": ["capabilities"],
+      "description": "设备只能声明有无、来源和限制；授权状态和隐私等级由服务端决定，出现这些字段即为非法。",
+      "properties": {
+        "capabilities": { "type": "array", "minItems": 1, "maxItems": 64,
+          "items": { "type": "object", "additionalProperties": false, "required": ["id", "presence"],
+            "properties": {
+              "id": { "$ref": "#/$defs/hardwareId" },
+              "presence": { "enum": ["PRESENT", "ABSENT", "UNKNOWN"] },
+              "source": { "enum": ["BUILTIN", "ACCESSORY", "EMULATED"] },
+              "limits": { "type": "object" } } } },
+        "battery": { "type": "object", "additionalProperties": false, "required": ["percent", "charging"],
+          "properties": { "percent": { "type": "integer", "minimum": 0, "maximum": 100 }, "charging": { "type": "boolean" } } }
+      }
+    },
+    "audioBegin": {
+      "type": "object", "additionalProperties": false,
+      "required": ["utteranceId", "codec", "sampleRate", "channels", "trigger"],
+      "properties": {
+        "utteranceId": { "$ref": "#/$defs/uuid" },
+        "codec": { "enum": ["pcm_s16le", "opus"] },
+        "sampleRate": { "enum": [16000, 24000, 48000] },
+        "channels": { "const": 1 },
+        "trigger": { "enum": ["wake", "button", "server_cmd"] }
+      }
+    },
+    "audioEnd": {
+      "type": "object", "additionalProperties": false, "required": ["utteranceId", "reason"],
+      "properties": { "utteranceId": { "$ref": "#/$defs/uuid" }, "reason": { "enum": ["vad", "button", "timeout", "cancel"] } }
+    },
+    "photoResult": {
+      "type": "object", "additionalProperties": false,
+      "required": ["captureId", "mimeType", "width", "height", "bytes"],
+      "properties": {
+        "captureId": { "$ref": "#/$defs/uuid" },
+        "mimeType": { "const": "image/jpeg" },
+        "width": { "type": "integer", "minimum": 1, "maximum": 8192 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 8192 },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 8388608 },
+        "mediaRef": { "type": "string", "pattern": "^(https|s3)://", "maxLength": 2048 },
+        "frameSeq": { "type": "integer", "minimum": 0 }
+      },
+      "oneOf": [ { "required": ["mediaRef"] }, { "required": ["frameSeq"] } ]
+    },
+    "sensorSample": {
+      "type": "object", "additionalProperties": false, "required": ["sensor", "samples"],
+      "properties": {
+        "sensor": { "enum": ["heart_rate", "spo2"] },
+        "samples": { "type": "array", "minItems": 1, "maxItems": 120,
+          "items": { "type": "object", "additionalProperties": false, "required": ["t", "v"],
+            "properties": { "t": { "type": "integer", "minimum": 0 }, "v": { "type": "number" },
+                            "q": { "type": "number", "minimum": 0, "maximum": 1 } } } }
+      }
+    },
+    "feedback": {
+      "type": "object", "additionalProperties": false, "required": ["skillKey", "version", "executionId", "value"],
+      "properties": {
+        "skillKey": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$", "maxLength": 63 },
+        "version": { "type": "integer", "minimum": 1 },
+        "executionId": { "$ref": "#/$defs/uuid" },
+        "value": { "enum": ["HELPFUL", "NOT_HELPFUL", "DISMISS_FOREVER"] }
+      }
+    },
+    "event": {
+      "type": "object", "additionalProperties": false,
+      "required": ["eventType", "schemaVersion", "idempotencyKey", "occurredAt", "data"],
+      "properties": {
+        "eventType": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "schemaVersion": { "type": "integer", "minimum": 1 },
+        "idempotencyKey": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "occurredAt": { "type": "string", "format": "date-time" },
+        "data": { "type": "object" }
+      }
+    },
+    "error": {
+      "type": "object", "additionalProperties": false, "required": ["code", "message", "retryable"],
+      "properties": {
+        "code": { "enum": ["HARDWARE_UNAVAILABLE", "PERMISSION_DENIED", "BUSY", "LOW_BATTERY", "RATE_LIMITED",
+                           "INVALID_MESSAGE", "UNSUPPORTED_VERSION", "PAYLOAD_TOO_LARGE", "UNAUTHENTICATED", "INTERNAL"] },
+        "message": { "type": "string", "maxLength": 200 },
+        "retryable": { "type": "boolean" },
+        "retryAfterMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ack": { "type": "object", "additionalProperties": false, "required": ["status"],
+             "properties": { "status": { "const": "OK" } } },
+    "cmdCapturePhoto": {
+      "type": "object", "additionalProperties": false,
+      "required": ["captureId", "maxEdge", "quality", "purpose", "indicatorRequired"],
+      "properties": {
+        "captureId": { "$ref": "#/$defs/uuid" },
+        "maxEdge": { "type": "integer", "minimum": 256, "maximum": 4096 },
+        "quality": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "purpose": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "indicatorRequired": { "const": true, "description": "采集必须点亮指示；设备端也要自己强制执行" }
+      }
+    },
+    "cmdListen": {
+      "type": "object", "additionalProperties": false, "required": ["maxSeconds", "indicatorRequired"],
+      "properties": { "utteranceId": { "$ref": "#/$defs/uuid" },
+                      "maxSeconds": { "type": "integer", "minimum": 1, "maximum": 60 },
+                      "indicatorRequired": { "const": true } }
+    },
+    "cmdStop": {
+      "type": "object", "additionalProperties": false, "required": ["target"],
+      "properties": { "target": { "enum": ["audio", "sensor", "camera", "all"] } }
+    },
+    "cmdSubscribeSensor": {
+      "type": "object", "additionalProperties": false, "required": ["sensor", "intervalMs", "maxSeconds"],
+      "properties": { "sensor": { "enum": ["heart_rate", "spo2"] },
+                      "intervalMs": { "type": "integer", "minimum": 500, "maximum": 60000 },
+                      "maxSeconds": { "type": "integer", "minimum": 1, "maximum": 3600 } }
+    },
+    "outDisplay": {
+      "type": "object", "additionalProperties": false, "required": ["lines", "ttlMs", "priority"],
+      "properties": {
+        "lines": { "type": "array", "minItems": 1, "maxItems": 3,
+                   "items": { "type": "string", "minLength": 1, "maxLength": 32 } },
+        "ttlMs": { "type": "integer", "minimum": 500, "maximum": 60000 },
+        "priority": { "enum": ["low", "normal", "high"] }
+      }
+    },
+    "outSpeak": {
+      "type": "object", "additionalProperties": false,
+      "required": ["speakId", "codec", "sampleRate", "channels", "interruptible"],
+      "properties": {
+        "speakId": { "$ref": "#/$defs/uuid" },
+        "codec": { "enum": ["pcm_s16le", "opus"] },
+        "sampleRate": { "enum": [16000, 24000, 48000] },
+        "channels": { "const": 1 },
+        "interruptible": { "type": "boolean" }
+      }
+    },
+    "outNotify": {
+      "type": "object", "additionalProperties": false,
+      "required": ["notificationId", "kind", "title", "body", "delivery"],
+      "properties": {
+        "notificationId": { "$ref": "#/$defs/uuid" },
+        "kind": { "enum": ["skill.trial", "skill.ready", "skill.expired", "hardware.gap", "system"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "body": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "delivery": { "type": "object", "additionalProperties": false, "required": ["whenIdle"],
+          "properties": { "whenIdle": { "type": "boolean" },
+                          "notBeforeTs": { "type": "integer", "minimum": 0 },
+                          "expiresTs": { "type": "integer", "minimum": 0 } } },
+        "actions": { "type": "array", "maxItems": 3,
+          "items": { "type": "object", "additionalProperties": false, "required": ["id", "label"],
+            "properties": { "id": { "enum": ["confirm", "reject", "later", "dismiss_forever"] },
+                            "label": { "type": "string", "minLength": 1, "maxLength": 16 } } } }
+      }
+    }
+  }
+}

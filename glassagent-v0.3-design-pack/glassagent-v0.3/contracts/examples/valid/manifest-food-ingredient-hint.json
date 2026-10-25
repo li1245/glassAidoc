@@ -1,0 +1,36 @@
+{
+  "manifestVersion": 2,
+  "skillKey": "food-ingredient-hint",
+  "displayName": "做菜时提示食物成分",
+  "version": 1,
+  "kind": "SCRIPT_BUNDLE",
+  "sdkApiVersion": "1.0",
+  "runtime": { "language": "typescript", "engine": "node22", "entry": "dist/index.js" },
+  "inputSchema": {
+    "type": "object",
+    "properties": { "imageRef": { "type": "string" }, "trigger": { "enum": ["intent", "scene"] } },
+    "required": ["imageRef"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "foodName": { "type": "string" },
+      "notableIngredients": { "type": "array", "items": { "type": "string" } },
+      "suitability": { "enum": ["OK", "CAUTION", "UNKNOWN"] },
+      "confidence": { "type": "number" },
+      "note": { "type": "string" }
+    },
+    "required": ["foodName", "suitability", "confidence"]
+  },
+  "requiredCapabilities": [
+    "device.camera.capture_photo", "model.vision.describe", "memory.recall", "device.notify.user"
+  ],
+  "hardware": { "required": ["camera.photo"], "optional": [], "anyOf": [["speaker.output"], ["display.hud"]] },
+  "triggers": [
+    { "type": "scene", "scene": "cooking", "onEvent": "vision.new_object", "cooldownSeconds": 60, "maxPerHour": 20 },
+    { "type": "intent", "examples": ["这个食物含有什么", "我能吃这个吗"] }
+  ],
+  "limits": { "timeoutMs": 15000, "memoryMb": 128, "maxOutputBytes": 4096 },
+  "privacy": { "dataClasses": ["MEDIA"], "readsPersonalMemory": true, "storesPersonalData": false, "retainsRawMedia": false },
+  "maxSideEffect": "USER_OUTPUT"
+}

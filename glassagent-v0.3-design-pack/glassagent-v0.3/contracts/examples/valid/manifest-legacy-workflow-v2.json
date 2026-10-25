@@ -1,0 +1,11 @@
+{
+  "manifestVersion": 2, "skillKey": "daily-greeting", "displayName": "每日问候", "version": 1,
+  "kind": "WORKFLOW", "sdkApiVersion": "1.0",
+  "inputSchema": { "type": "object" }, "outputSchema": { "type": "object" },
+  "requiredCapabilities": ["model.llm.chat", "device.notify.user"],
+  "hardware": { "anyOf": [["speaker.output"], ["display.hud"]] },
+  "triggers": [ { "type": "schedule", "cron": "0 8 * * *", "maxPerDay": 1 } ],
+  "limits": { "timeoutMs": 5000, "memoryMb": 64, "maxOutputBytes": 1024 },
+  "privacy": { "dataClasses": [], "readsPersonalMemory": false, "storesPersonalData": false, "retainsRawMedia": false },
+  "maxSideEffect": "USER_OUTPUT"
+}

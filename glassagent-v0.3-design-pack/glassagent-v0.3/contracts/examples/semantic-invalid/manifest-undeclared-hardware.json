@@ -1,0 +1,12 @@
+{
+  "manifestVersion": 2, "skillKey": "hr-alert", "displayName": "心率提醒", "version": 1,
+  "kind": "SCRIPT_BUNDLE", "sdkApiVersion": "1.0",
+  "runtime": { "language": "typescript", "engine": "node22", "entry": "dist/index.js" },
+  "inputSchema": { "type": "object" }, "outputSchema": { "type": "object" },
+  "requiredCapabilities": ["device.sensor.read_heart_rate", "device.notify.user"],
+  "hardware": { "anyOf": [["speaker.output"], ["display.hud"]] },
+  "triggers": [ { "type": "event", "event": "sensor.heart_rate.high", "cooldownSeconds": 300, "maxPerHour": 4 } ],
+  "limits": { "timeoutMs": 3000, "memoryMb": 64, "maxOutputBytes": 512 },
+  "privacy": { "dataClasses": ["NORMAL"], "readsPersonalMemory": false, "storesPersonalData": false, "retainsRawMedia": false },
+  "maxSideEffect": "USER_OUTPUT"
+}

@@ -1,0 +1,1 @@
+{"v":1,"type":"out.notify","id":"11111111-1111-4111-8111-111111111111","seq":9,"ts":1790000002000,"payload":{"notificationId":"22222222-2222-4222-8222-222222222222","kind":"skill.trial","title":"新技能可试用","body":"做菜时我会提示食物成分，试试看？","delivery":{"whenIdle":true,"expiresTs":1790000602000},"actions":[{"id":"confirm","label":"好用"},{"id":"later","label":"稍后"}]}}
